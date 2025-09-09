@@ -22,5 +22,3 @@ class BaseModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, default=datetime.now(), onupdate=datetime.now())
-    created_by = Column(Integer, ForeignKey("users.id"))
-    updated_by = Column(Integer, ForeignKey("users.id"))
