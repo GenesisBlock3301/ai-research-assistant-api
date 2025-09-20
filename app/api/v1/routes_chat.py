@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.api.v1.deps import get_current_user
 from app.db import get_db, User
 from app.services import LLaMAWrapper, VectorStore, EmbeddingService, get_retrieval_qa
-from app.services.langgraph_nodes import MultilineStepQA
+from app.services.langgraph_nodes import multiline_step_qa
 
 chat_router = APIRouter()
 embedding_service = EmbeddingService()
@@ -34,18 +34,8 @@ def chat(query: str):
 
 
 @chat_router.post("/chat/multiline")
-def chat_multiline(query: str, current_user: User = Depends(get_current_user)):
-    """
-    /chat/multi → multi-step pipeline:
-    Retrieve docs
-    Summarize docs
-    Return both
-    :param current_user:
-    :param query:
-    :return:
-    """
-    graph = MultilineStepQA()
-    result = graph.invoke(query)
+def chat_multiline(query: str):
+    result = multiline_step_qa(query)
     return {
         "summary": result['summary'],
         "sources": [d.metadata for d in result["docs"]],

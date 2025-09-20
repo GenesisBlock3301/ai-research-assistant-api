@@ -1,25 +1,37 @@
-from langgraph import Node
+from typing import List, TypedDict
 
-from app.services import get_retrieval_qa
-
-
-class RetrieveNode(Node):
-    def run(self, input_text: str):
-        qa = get_retrieval_qa()
-        docs = qa.retriever.get_relevant_documents(input_text)
-        return docs
+from app.config import settings
+from app.services import get_retrieval_qa, LLaMAWrapper
 
 
-class SummerizeNode(Node):
-    def run(self, docs):
-        context = "\n".join([d.page_content for d in docs])
-        qa = get_retrieval_qa()
-        summary = qa.llm(f"Summarize the following:\n {context}")
-        return summary
+# Define a state type
+class State(TypedDict):
+    query: str
+    docs: List[str]
+    summary: str
+
+def retrieve_documents(state: State) -> State:
+    """Retrieve relevant documents for a query."""
+    qa = get_retrieval_qa()
+    docs = qa.retriever.invoke(state["query"])
+    state["docs"] = docs
+    return state
+
+def summarize_documents(state: State) -> State:
+    llm = LLaMAWrapper(endpoint=settings.LLM_SERVER_URL)
+
+    if state.get("docs"):
+        context = "\n".join([d.page_content for d in state["docs"]])
+        prompt = f"Summarize the following:\n{context}"
+    else:
+        prompt = f"Answer the following query:\n{state['query']}"
+    summary = llm._call(prompt)
+    state["summary"] = summary
+    return state
 
 
-class MultilineStepQA(Node):
-    def run(self, query):
-        docs = RetrieveNode().run(query)
-        summary = SummerizeNode().run(docs)
-        return summary
+def multiline_step_qa(query: str) -> State:
+    state: State = {"query": query, "docs": [], "summary": ""}
+    state = retrieve_documents(state)
+    state = summarize_documents(state)
+    return state

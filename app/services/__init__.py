@@ -3,7 +3,7 @@ from .llama_service import LLaMAWrapper
 from .vector_store import VectorStore
 from .ingestion_service import IngestionService
 from .langchain_rag_service import get_retrieval_qa
-from .langgraph_nodes import MultilineStepQA
+from .langgraph_nodes import multiline_step_qa
 
 __all__ = [
     "EmbeddingService",
@@ -11,5 +11,5 @@ __all__ = [
     "VectorStore",
     "IngestionService",
     "get_retrieval_qa",
-    "MultilineStepQA",
+    "multiline_step_qa",
 ]

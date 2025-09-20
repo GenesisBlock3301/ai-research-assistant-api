@@ -1,20 +1,21 @@
 from pydantic_settings import BaseSettings
-
+from pathlib import Path
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/research_agent"
-    EMBEDDING_MODEL_NAME: str = "sentence-transformers/all-mpnet-base-v2"
-    EMBEDDING_DIM: int = 768
-    LLM_SERVER_URL: str = "http://localhost:11434/api/generate"
-    PG_VECTOR_DIM: int = 768
-    SECRET_KEY: str = "change-me-to-a-secure-random-key"
-    REDIS_URL: str = "redis://localhost:6379/0"
+    DATABASE_URL: str
+
+    EMBEDDING_MODEL_NAME: str
+    EMBEDDING_DIM: int
+    LLM_SERVER_URL: str
+    PG_VECTOR_DIM: int
+    SECRET_KEY: str
+    REDIS_URL: str
     POSTGRES_USER: str
     POSTGRES_DB: str
     POSTGRES_PASSWORD: str
 
     class Config:
-        env_file = ".env"
+        env_file = Path(__file__).resolve().parent.parent / ".env"
         extra = "allow"
 
 
