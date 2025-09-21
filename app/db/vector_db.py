@@ -1,27 +1,17 @@
-from langchain.vectorstores import PGVector
-from langchain.embeddings import SentenceTransformerEmbeddings
-from sqlalchemy import create_engine
+from langchain_postgres import PGVector
+from langchain.chains import RetrievalQA
+from langchain_huggingface import HuggingFaceEmbeddings
 from app.config import settings
 
-# Create embedding objects
-embeddings = SentenceTransformerEmbeddings(model_name=settings.vector_model_name)
 
+embeddings = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL_NAME)
 
-# Connect to Postgres
-engine = create_engine(settings.DATABASE_URL)
-
-vectorstore = PGVector(
-    connection_string=settings.DATABASE_URL,
+vector_store = PGVector(
     embeddings=embeddings,
-    collection_name="document_chunks",
+    collection_name="document_chunks_collection",
+    connection=settings.DATABASE_URL,
+    use_jsonb=True,
 )
 
-
-texts = [
-    "This is a sample chunk from a CV paper about object detection.",
-    "Another chunk about GANs for image synthesis."
-]
-
-vectorstore.add_texts(texts)
 
 

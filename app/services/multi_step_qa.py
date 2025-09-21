@@ -1,19 +1,24 @@
 from typing import List, TypedDict
 
 from app.config import settings
-from app.services import get_retrieval_qa, LLaMAWrapper
+from app.services import LLaMAWrapper, EmbeddingService
+from app.services.retriever import PostgresRetriever
+from app.services.vector_store import VectorStorage
 
 
-# Define a state type
 class State(TypedDict):
     query: str
     docs: List[str]
     summary: str
 
-def retrieve_documents(state: State) -> State:
-    """Retrieve relevant documents for a query."""
-    qa = get_retrieval_qa()
-    docs = qa.retriever.invoke(state["query"])
+def retrieve_documents(state: State, vector_storage, owner_id: int) -> State:
+    retriever = PostgresRetriever(
+        vector_storage=vector_storage,
+        embedding_service=EmbeddingService(),
+        owner_id=owner_id,
+        k=5
+    )
+    docs = retriever.invoke(state["query"])
     state["docs"] = docs
     return state
 
@@ -30,8 +35,9 @@ def summarize_documents(state: State) -> State:
     return state
 
 
-def multiline_step_qa(query: str) -> State:
+def multiline_step_qa(query: str, db, owner_id: int) -> State:
     state: State = {"query": query, "docs": [], "summary": ""}
-    state = retrieve_documents(state)
+    vector_storage = VectorStorage(db)
+    state = retrieve_documents(state, vector_storage, owner_id=owner_id)
     state = summarize_documents(state)
     return state

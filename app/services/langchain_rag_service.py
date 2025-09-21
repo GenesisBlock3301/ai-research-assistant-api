@@ -1,23 +1,9 @@
-from langchain_postgres import PGVector
 from langchain.chains import RetrievalQA
-from langchain_huggingface import HuggingFaceEmbeddings
 from app.config import settings
 from app.services.llama_service import LLaMAWrapper
-
+from app.db import vector_store
 
 def get_retrieval_qa() -> RetrievalQA:
-
-    # Initialize embeddings
-    embeddings = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL_NAME)
-
-    # Initialize PGVector vector store (new API)
-
-    vector_store = PGVector(
-        embeddings=embeddings,
-        collection_name="document_chunks_collection",
-        connection=settings.DATABASE_URL,
-        use_jsonb=True,
-    )
 
     # Create retriever
     retriever = vector_store.as_retriever(

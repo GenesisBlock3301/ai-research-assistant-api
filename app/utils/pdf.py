@@ -8,7 +8,7 @@ def load_pdf(file_path: str) -> str:
     reader = PdfReader(file_path)
     text = ""
     for page in reader.pages:
-        text += page.extractText() + "\n"
+        text += page.extract_text() + "\n"
     return text
 
 def chunk_text(text: str, chunk_size:int=1000, chunk_overlap:int=200) -> List[Document]:

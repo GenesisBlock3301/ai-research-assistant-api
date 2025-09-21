@@ -1,47 +1,31 @@
+from sqlalchemy import Select
+
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.expression import text
 
-from app.db.models import DocumentChunk
+from app.db import DocumentChunk, Document
 
 
-class VectorStore:
+class VectorStorage:
     def __init__(self, db: Session):
         self.db = db
 
     def insert_chunk(self, **kwargs):
-        document_id: int = kwargs.pop('document_id')
-        chunk_text: str = kwargs.pop('chunk_text')
-        embedding: list = kwargs.pop('embedding')
-        start_pos: int = kwargs.pop('start_pos')
-        end_pos: int = kwargs.pop('end_pos')
-        tokens: int = kwargs.pop('tokens')
-        metadata: dict = kwargs.pop('metadata')
         chunk = DocumentChunk(
-            document_id=document_id,
-            chunk_text=chunk_text,
-            embedding=embedding,
-            start_pos=start_pos,
-            end_pos=end_pos,
-            tokens=tokens,
-            meta_info=metadata,
+            document_id=kwargs.get('document_id'),
+            chunk_text=kwargs.get('chunk_text'),
+            embedding=kwargs.get('embedding'),
+            start_pos=kwargs.get('start_pos'),
+            end_pos=kwargs.get('end_pos'),
+            tokens=kwargs.get('tokens'),
+            meta_info=kwargs.get('meta_info'),
         )
         self.db.add(chunk)
         self.db.commit()
         self.db.refresh(chunk)
-        return chunk,
+        return chunk
 
-    def query(self, embedding: list, top_k: int = 5):
-        sql = text("""
-                   SELECT id,
-                          document_id,
-                          chunk_text,
-                          meta_info,
-                          embedding <-> CAST(:emb AS vector) AS distance
-                   FROM document_chunks
-                   ORDER BY embedding <-> CAST(:emb AS vector) LIMIT :k
-                   """)
-        rows = self.db.execute(
-            sql,
-            {"k": top_k, "emb": embedding}
-        )
-        return rows
+    def search(self, query_embeddings, k=5, owner_id=None):
+        q = Select(DocumentChunk).order_by(DocumentChunk.embedding.l2_distance(query_embeddings)).limit(k)
+        if owner_id:
+            q = q.join(Document).filter(Document.owner_id == owner_id)
+        return self.db.scalars(q).all()

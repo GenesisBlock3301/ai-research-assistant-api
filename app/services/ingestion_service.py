@@ -1,16 +1,19 @@
 from sqlalchemy.orm import Session
-
+from langchain_core.documents import Document as LCDocument
 from app.db.models import Document
-from app.services import EmbeddingService, VectorStore
+from app.services import EmbeddingService
+from app.services.vector_store import VectorStorage
 from app.utils import load_pdf, chunk_text
+from app.db import vector_store
 
-embedding_service = EmbeddingService()
+
 
 
 class IngestionService:
     def __init__(self, db: Session):
         self.db = db
-        self.vector_store = VectorStore(db)
+        self.vector_store = VectorStorage(db)
+        self.embedding_service = EmbeddingService()
 
     def ingest_pdf(self, file_path: str, title: str, owner_id: int):
         doc = Document(title=title, owner_id=owner_id)
@@ -21,10 +24,8 @@ class IngestionService:
         # Load + chunk pdf
         text = load_pdf(file_path)
         chunks = chunk_text(text)
-
-        # embedding + insert chunk.
-        for chunk in chunks:
-            emb = embedding_service.embed_texts([chunk.page_content])[0]
+        for idx, chunk in enumerate(chunks):
+            emb = self.embedding_service.embed_texts([chunk.page_content])[0]
             self.vector_store.insert_chunk(
                 document_id=doc.id,
                 chunk_text=chunk.page_content,
