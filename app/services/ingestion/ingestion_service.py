@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
-from langchain_core.documents import Document as LCDocument
 from app.db.models import Document
 from app.services import EmbeddingService
 from app.services.vector_store import VectorStorage
 from app.utils import load_pdf, chunk_text
-from app.db import vector_store
 
 
 
