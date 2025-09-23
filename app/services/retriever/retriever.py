@@ -7,16 +7,24 @@ from app.services import EmbeddingService
 from app.services.vector_store import VectorStorage
 
 
-
 class PostgresRetriever(BaseRetriever):
     vector_storage: VectorStorage = Field(...)
     embedding_service: EmbeddingService = Field(...)
     owner_id: int = Field(None)
     k: int = Field(default=5)
+    metadata_filter: dict = Field(default_factory=dict)
 
     def filter_relevant_chunks(self, query_emb, chunks, threshold=0.7):
         relevant = []
         for chunk in chunks:
+            if self.metadata_filter:
+                match = True
+                for key, value in self.metadata_filter.items():
+                    if not chunk.meta_info or chunk.meta_info[key] != value:
+                        match = False
+                        break
+                if not match:
+                    continue
             chunk_emb = np.array(chunk.embedding)
             sim = np.dot(query_emb, chunk_emb) / (np.linalg.norm(query_emb) * np.linalg.norm(chunk_emb))
             if sim >= threshold:
