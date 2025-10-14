@@ -1,6 +1,6 @@
 from langchain.chains import RetrievalQA
 from app.config import settings
-from app.services.llama_service import LLaMAWrapper
+from app.services.llm.llama_service import LLaMAWrapper
 from app.db import vector_store
 
 def get_retrieval_qa() -> RetrievalQA:

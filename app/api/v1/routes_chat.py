@@ -3,7 +3,7 @@ from fastapi.params import Depends
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.services import LLaMAWrapper, EmbeddingService, get_retrieval_qa
-from app.services.multi_step_qa import multiline_step_qa
+from app.services.qa.multi_step_qa import multiline_step_qa
 
 chat_router = APIRouter()
 embedding_service = EmbeddingService()
