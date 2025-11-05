@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import user_router, chat_router, document_router
 from app.middlewares import AuthMiddleware
 
-
 origins = [
     "http://localhost:3000",  # your frontend URL
     "http://127.0.0.1:3000",  # optional, same as above
+    "http://localhost:5173",  # Vite default
+    "http://127.0.0.1:5173",
 ]
 app = FastAPI(title="Personal Research Agent")
 

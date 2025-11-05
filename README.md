@@ -53,7 +53,7 @@ It combines:
 | 🧬 **Vector Embeddings**      | Store document chunks in pgvector for fast semantic search       |
 | 🔍 **RAG Pipeline**           | Retrieve relevant chunks before querying the LLM                 |
 | 🧠 **Agentic Workflow**       | Built with LangGraph for multi-step reasoning and fallback logic |
-| 💬 **Chat Interface API**     | Query knowledge base or directly the model                       |
+| 💬 **Page Interface API**     | Query knowledge base or directly the model                       |
 | ☁️ **Containerized Infra**    | Docker + Kubernetes (Helm-ready) for scalable deployment         |
 
 ---
@@ -62,7 +62,7 @@ It combines:
 ```ai-research-assistant-api/
 ├── app/
 │ ├── api/v1/ # FastAPI route definitions
-│ ├── chats/ # Chat models and services
+│ ├── chats/ # Page models and services
 │ ├── db/ # SQLAlchemy models, migrations, vector_db
 │ ├── schemas/ # Pydantic schemas
 │ ├── services/ # Core services: LLM, RAG, embeddings, retrieval
