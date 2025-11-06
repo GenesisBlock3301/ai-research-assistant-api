@@ -1,6 +1,6 @@
 import shutil
 import tempfile
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.base import get_db
 from app.services import IngestionService
@@ -15,7 +15,8 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB limit
 def upload_pdf(file: UploadFile = File(...), title: str = "",
                db: Session = Depends(get_db)):
     if file.content_type != "application/pdf":
-        raise HTTPException(status_code=400, detail="Invalid file type. Only PDF allowed.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Invalid file type. Only PDF allowed.")
 
     # Validate file size
     file.file.seek(0, 2)

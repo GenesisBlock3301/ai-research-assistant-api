@@ -30,9 +30,9 @@ def summarize_documents(state: State) -> State:
         context = "\n".join([d.page_content for d in state["docs"]])
         prompt = f"Summarize the following:\n{context}"
     else:
-        prompt = f"Answer the following query:\n{state['query']}"
-    summary = llm._call(prompt)
-    state["summary"] = summary
+        prompt = ""
+    summary = llm._call(prompt) if prompt else ""
+    state["summary"] = summary if summary else ""
     return state
 
 
@@ -40,5 +40,5 @@ def multiline_step_qa(query: str, db, owner_id: int) -> State:
     state: State = {"query": query, "docs": [], "summary": ""}
     vector_storage = VectorStorage(db)
     state = retrieve_documents(state, vector_storage, owner_id=owner_id)
-    state = summarize_documents(state)
+    state = summarize_documents(state) if state['docs'] else state
     return state

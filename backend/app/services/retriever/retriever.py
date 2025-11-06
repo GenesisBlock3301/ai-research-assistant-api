@@ -13,6 +13,7 @@ class PostgresRetriever(BaseRetriever):
     owner_id: int = Field(None)
     k: int = Field(default=5)
     metadata_filter: dict = Field(default_factory=dict)
+
     def filter_relevant_chunks(self, query_emb, chunks, threshold=0.7):
         def is_metadata_match(chunk):
             if not self.metadata_filter:

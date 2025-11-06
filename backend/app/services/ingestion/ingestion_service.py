@@ -7,60 +7,80 @@ import re
 
 
 class IngestionService:
+    """
+    Ingests user-uploaded PDFs into database + vector store (pgvector),
+    splitting text into manageable chunks and embedding them.
+    """
+
     def __init__(self, db: Session):
         self.db = db
         self.vector_store = VectorStorage(db)
         self.embedding_service = EmbeddingService()
 
+    # --- Step 1: Text Cleaning & Chunking ---
     @staticmethod
-    def split_sections(text: str):
-        pattern = re.compile(r'(Abstract|Introduction|Methods|Materials|Results|Discussion|Conclusion|References)\s*',
-                             re.IGNORECASE)
-        splits = pattern.split(text)
-
-        sections = {}
-        if len(splits) <= 1:
-            # If no headers found, put all text under 'FullText'
-            sections["FullText"] = text
-        else:
-            for i in range(1, len(splits), 2):
-                section_name = splits[i].strip()
-                section_text = splits[i + 1].strip()
-                sections[section_name] = section_text
-        return sections
+    def clean_text(text: str) -> str:
+        """Remove extra whitespace, line breaks, and non-printable characters."""
+        text = re.sub(r'\s+', ' ', text)  # collapse whitespace
+        text = re.sub(r'[^\x20-\x7E\n]+', ' ', text)  # remove weird chars
+        return text.strip()
 
     @staticmethod
-    def chunk_paragraphs(section_text: str):
-        paragraphs = [p.strip() for p in section_text.split("\n\n") if len(p.strip()) > 0]
-        return paragraphs
+    def chunk_text(text: str, max_chunk_size: int = 500):
+        """
+        Break text into chunks of roughly max_chunk_size words.
+        Keeps semantic boundaries by splitting on sentence endings where possible.
+        """
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        chunks, current_chunk = [], []
 
+        for sentence in sentences:
+            if len(" ".join(current_chunk + [sentence]).split()) > max_chunk_size:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = [sentence]
+            else:
+                current_chunk.append(sentence)
+
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+        return [c.strip() for c in chunks if len(c.strip()) > 0]
+
+    # --- Step 2: Ingest & Store Embeddings ---
     def ingest_pdf(self, file_path: str, title: str, owner_id: int):
+        """
+        Reads a PDF, extracts text, chunks it, embeds each chunk,
+        and saves all into the database linked to the user.
+        """
+        # Create document record
         doc = Document(title=title, owner_id=owner_id)
         self.db.add(doc)
         self.db.commit()
         self.db.refresh(doc)
 
-        text = load_pdf(file_path)
+        # Extract and clean text
+        raw_text = load_pdf(file_path)
+        clean_text = self.clean_text(raw_text)
 
-        sections = self.split_sections(text)
+        # Chunk into meaningful sections
+        chunks = self.chunk_text(clean_text, max_chunk_size=500)
+        print(f"[Ingestion] Extracted {len(chunks)} chunks from PDF: {title}")
 
-        for section_name, section_text in sections.items():
-            paragraphs = self.chunk_paragraphs(section_text)
-            for idx, paragraph in enumerate(paragraphs):
-                if len(paragraph) == 0:
-                    continue
-                emb = self.embedding_service.embed_texts([paragraph])[0]
-                self.vector_store.insert_chunk(
-                    document_id=doc.id,
-                    chunk_text=paragraph,
-                    embedding=emb,
-                    start_pos=0,
-                    end_pos=len(paragraph),
-                    tokens=len(paragraph.split()),
-                    metadata={
-                        "title": title,
-                        "section": section_name,
-                        "paragraph_index": idx
-                    },
-                )
+        # Embed and store each chunk
+        for idx, chunk in enumerate(chunks):
+            embedding = self.embedding_service.embed_texts([chunk])[0]
+            self.vector_store.insert_chunk(
+                document_id=doc.id,
+                chunk_text=chunk,
+                embedding=embedding,
+                start_pos=0,
+                end_pos=len(chunk),
+                tokens=len(chunk.split()),
+                metadata={
+                    "title": title,
+                    "chunk_index": idx,
+                },
+            )
+
+        print(f"[Ingestion] Successfully ingested '{title}' with {len(chunks)} chunks.")
         return doc
