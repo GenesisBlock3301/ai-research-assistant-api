@@ -90,12 +90,12 @@ It combines:
    → Text chunks are embedded via LangChain’s embedding model.
 
 3. **Storage**  
-   → Embeddings + metadata stored in PostgreSQL with `pgvector`.
+   → Embeddings and metadata stored in PostgresSQL with `pgvector`.
 
 4. **Query Phase**  
    → When a user asks a question:  
       - Retrieve top relevant chunks from pgvector.  
-      - If no relevant context found → fallback to direct LLM reasoning.
+      - If no relevant context is found → fallback to direct LLM reasoning.
 
 5. **Response Generation**  
    → Context + query fed into Ollama LLM (Zephyr-7B) for coherent, research-grounded output.
