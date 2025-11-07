@@ -10,19 +10,19 @@ const RegisterForm = () => {
                 type="email"
                 placeholder="Email"
                 name="email"
-                className="p-2 border rounded placeholder-gray-700"
+                className="p-2 border rounded placeholder-gray-700 text-black"
             />
             <input
                 type="password"
                 placeholder="Password"
                 name="password"
-                className="p-2 border rounded placeholder-gray-700"
+                className="p-2 border rounded placeholder-gray-700 text-black"
             />
             <input
                 type="password"
                 placeholder="Confirm Password"
                 name="confirmPassword"
-                className="p-2 border rounded placeholder-gray-700"
+                className="p-2 border rounded placeholder-gray-700 text-black"
             />
             <button
                 type="submit"

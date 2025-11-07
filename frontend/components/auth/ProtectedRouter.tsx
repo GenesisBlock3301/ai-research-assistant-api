@@ -28,7 +28,6 @@ export default function ProtectedRouter({children}: { children: React.ReactNode 
     useEffect(() => {
         const verifyToken = async () => {
             try {
-                // if token not exist
                 console.log("token", token)
                 if (!token) {
                     router.replace("/login");

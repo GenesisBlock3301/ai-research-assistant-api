@@ -24,12 +24,11 @@ def upload_pdf(
         if file.content_type != "application/pdf":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Invalid file type. Only PDF allowed.")
-        # Validate file size
         file.file.seek(0, 2)
         file_size = file.file.tell()
         file.file.seek(0)
         if file_size > MAX_FILE_SIZE:
-            raise HTTPException(status_code=400, detail="File too large. Max 10 MB allowed.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File too large. Max 10 MB allowed.")
 
         ingestion_service = IngestionService(db)
 
